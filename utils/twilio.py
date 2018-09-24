@@ -1,10 +1,13 @@
 from twilio.twiml.voice_response import VoiceResponse,Gather,Say
+import time
 
-def buildTwilioResponse (text, endOfConversation=False, waitForResponse=False, routeToMainMenu=False, applicationError=False, hangUp=False, language='en-US'):
+def buildTwilioResponse (text, endOfConversation=False, waitForResponse=False, routeToMainMenu=False, 
+                            applicationError=False, hangUp=False, dtmf=None, language='en-IN'):
     resp = VoiceResponse()
-    resp.say(text, voice='Polly.Joanna')
-
-    print("bot: " + text)
+    if text:
+        resp.say(text, voice='Polly.Joanna')
+        print(str(time.time()) + " - bot: " + text)
+    
     if waitForResponse:
         print('Waiting for response from bot')
         resp.redirect('/wait/1', method="POST");
@@ -21,6 +24,19 @@ def buildTwilioResponse (text, endOfConversation=False, waitForResponse=False, r
         resp.say("Thanks for using NTT Service Desk, Have a nice day. BYE!!!", voice="Polly.Joanna")
         resp.hangup()
         return str(resp)
+    
+    if dtmf:
+        print("Gathering DTMF input")
+        digits = dtmf['num_digits']
+        gather = Gather(input="speech dtmf", num_digits=digits, method="POST", action="/gather", language=language, speechTimeout='auto')
+        resp.append(gather)
+        resp.say("I didn't quite catch that. Please try again.", voice='Polly.Joanna')
+        gather = Gather(input="speech dtmf", num_digits=digits, method="POST", action="/gather", language=language, speechTimeout='auto')
+        resp.append(gather)
+        resp.say("Disconnecting. Please try again later", voice='Polly.Joanna')
+        resp.hangup()
+        return resp
+
 
 
     print('Gathering User Input')
@@ -32,5 +48,6 @@ def buildTwilioResponse (text, endOfConversation=False, waitForResponse=False, r
     resp.say("Disconnecting. Please try again later", voice='Polly.Joanna')
     resp.hangup()
     return resp
+
 
     

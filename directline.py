@@ -15,6 +15,12 @@ class DirectLineAPI(object):
         
         self._start_conversation()
 
+    def _get_dtmf(self, activities):
+        cdata = [x.get('channelData', None) for x in activities]
+        cdata = list(filter(lambda x: x is not None, cdata))
+        cdata = [x.get('dtmf',None) for x in cdata]
+        cdata = list(filter(lambda x: x is not None, cdata))
+        return cdata[0] if len(cdata)>0 else None
 
     def _set_headers(self):
         headers = {'Content-Type': 'application/json'}
@@ -104,8 +110,10 @@ class DirectLineAPI(object):
                 'endOfConversation': endOfConversation,
                 'waitForResponse': waitForResponse,
                 'routeToMainMenu': routeToMainMenu,
-                'hangUp':hangUp
+                'hangUp':hangUp,
+                'dtmf':self._get_dtmf(botactivities)
             }
+            print (result)
             return result
         elif not len(resp.json()['activities']):
             return None
